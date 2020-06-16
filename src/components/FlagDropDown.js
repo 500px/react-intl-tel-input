@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import CountryList from './CountryList';
-import RootModal from './RootModal';
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import classNames from 'classnames'
+import CountryList from './CountryList'
+import RootModal from './RootModal'
 
 export default class FlagDropDown extends Component {
   static propTypes = {
@@ -24,40 +24,27 @@ export default class FlagDropDown extends Component {
     changeHighlightCountry: PropTypes.func,
     titleTip: PropTypes.string,
     refCallback: PropTypes.func.isRequired,
-  };
+  }
 
   genSelectedDialCode = () => {
-    const { separateDialCode, dialCode } = this.props;
+    const { separateDialCode, dialCode } = this.props
 
     return separateDialCode ? (
       <div className="selected-dial-code">{dialCode}</div>
-    ) : (
-      ''
-    );
-  };
+    ) : null
+  }
 
   genArrow = () => {
-    const { allowDropdown, showDropdown } = this.props;
-    const arrowClass = classNames({
-      'iti-arrow': true,
-      up: showDropdown,
-    });
+    const { allowDropdown, showDropdown } = this.props
+    const arrowClasses = classNames('arrow', showDropdown ? 'up' : 'down')
 
-    return allowDropdown ? <div className={arrowClass} /> : '';
-  };
+    return allowDropdown ? <div className={arrowClasses} /> : null
+  }
 
-  genFlagClassName = () => {
-    const { countryCode } = this.props;
-    const flagClassObj = {
-      'iti-flag': true,
-    };
-
-    if (countryCode) {
-      flagClassObj[countryCode] = true;
-    }
-
-    return classNames(flagClassObj);
-  };
+  genFlagClassName = () =>
+    classNames('iti-flag', {
+      [this.props.countryCode]: !!this.props.countryCode,
+    })
 
   genCountryList = () => {
     const {
@@ -72,12 +59,12 @@ export default class FlagDropDown extends Component {
       preferredCountries,
       highlightedCountry,
       changeHighlightCountry,
-    } = this.props;
+    } = this.props
 
     return (
       <CountryList
         ref={countryList => {
-          this.countryList = countryList;
+          this.countryList = countryList
         }}
         dropdownContainer={dropdownContainer}
         isMobile={isMobile}
@@ -90,8 +77,8 @@ export default class FlagDropDown extends Component {
         highlightedCountry={highlightedCountry}
         changeHighlightCountry={changeHighlightCountry}
       />
-    );
-  };
+    )
+  }
 
   render() {
     const {
@@ -102,7 +89,7 @@ export default class FlagDropDown extends Component {
       titleTip,
       dropdownContainer,
       showDropdown,
-    } = this.props;
+    } = this.props
 
     return (
       <div ref={refCallback} className="flag-container">
@@ -123,6 +110,6 @@ export default class FlagDropDown extends Component {
           this.genCountryList()
         )}
       </div>
-    );
+    )
   }
 }

@@ -1,11 +1,9 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import utils from './utils';
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import classNames from 'classnames'
+import utils from './utils'
 
-function partial(fn, ...args) {
-  return fn.bind(fn, ...args);
-}
+import FlagBox from './FlagBox'
 
 export default class CountryList extends Component {
   static propTypes = {
@@ -18,139 +16,117 @@ export default class CountryList extends Component {
     changeHighlightCountry: PropTypes.func,
     showDropdown: PropTypes.bool,
     isMobile: PropTypes.bool,
-  };
+  }
 
   shouldComponentUpdate(nextProps) {
-    const shouldUpdate = !utils.shallowEquals(this.props, nextProps);
+    const shouldUpdate = !utils.shallowEquals(this.props, nextProps)
 
     if (shouldUpdate && nextProps.showDropdown) {
-      this.listElement.setAttribute('class', 'country-list v-hide');
-      this.setDropdownPosition();
+      this.listElement.classList.add('v-hide')
+      this.setDropdownPosition()
     }
 
-    return shouldUpdate;
+    return shouldUpdate
   }
 
   setDropdownPosition = () => {
-    utils.removeClass(this.listElement, 'hide');
-
-    const inputTop = this.props.inputTop;
+    this.listElement.classList.remove('hide')
+    const inputTop = this.props.inputTop
     const windowTop =
       window.pageYOffset !== undefined
         ? window.pageYOffset
         : (
-          document.documentElement ||
+            document.documentElement ||
             document.body.parentNode ||
             document.body
-        ).scrollTop;
+          ).scrollTop
     const windowHeight =
       window.innerHeight ||
       document.documentElement.clientHeight ||
-      document.body.clientHeight;
-    const inputOuterHeight = this.props.inputOuterHeight;
-    const countryListOuterHeight = utils.getOuterHeight(this.listElement);
+      document.body.clientHeight
+    const inputOuterHeight = this.props.inputOuterHeight
+    const countryListOuterHeight = utils.getOuterHeight(this.listElement)
     const dropdownFitsBelow =
       inputTop + inputOuterHeight + countryListOuterHeight <
-      windowTop + windowHeight;
-    const dropdownFitsAbove = inputTop - countryListOuterHeight > windowTop;
+      windowTop + windowHeight
+    const dropdownFitsAbove = inputTop - countryListOuterHeight > windowTop
 
     // dropdownHeight - 1 for border
     const cssTop =
       !dropdownFitsBelow && dropdownFitsAbove
         ? `-${countryListOuterHeight - 1}px`
-        : '';
+        : ''
 
-    this.listElement.style.top = cssTop;
-    this.listElement.setAttribute('class', 'country-list');
-  };
-
-  setFlag = iso2 => {
-    this.props.setFlag(iso2);
-  };
+    this.listElement.style.top = cssTop
+    this.listElement.classList.remove('v-hide')
+  }
 
   appendListItem = (countries, isPreferred = false) => {
-    const preferredCountriesCount = this.props.preferredCountries.length;
+    const preferredCountriesCount = this.props.preferredCountries.length
 
     return countries.map((country, index) => {
-      const actualIndex = isPreferred ? index : index + preferredCountriesCount;
+      const actualIndex = isPreferred ? index : index + preferredCountriesCount
       const countryClassObj = {
         country: true,
         highlight: this.props.highlightedCountry === actualIndex,
         preferred: isPreferred,
-      };
-      const countryClass = classNames(countryClassObj);
-      const keyPrefix = isPreferred ? 'pref-' : '';
+      }
+      const countryClass = classNames(countryClassObj)
+      const onMouseOverOrFocus = this.props.isMobile
+        ? () => {}
+        : this.handleMouseOver
+      const keyPrefix = isPreferred ? 'pref-' : ''
 
       return (
-        <li
+        <FlagBox
           key={`${keyPrefix}${country.iso2}`}
-          className={countryClass}
-          data-dial-code={country.dialCode}
-          data-country-code={country.iso2}
-          onMouseOver={this.props.isMobile ? null : this.handleMouseOver}
-          onClick={partial(this.setFlag, country.iso2)}
-        >
-          <div
-            ref={selectedFlag => {
-              this.selectedFlag = selectedFlag;
-            }}
-            className="flag-box"
-          >
-            <div
-              ref={selectedFlagInner => {
-                this.selectedFlagInner = selectedFlagInner;
-              }}
-              className={`iti-flag ${country.iso2}`}
-            />
-          </div>
-
-          <span className="country-name">{country.name}</span>
-          <span className="dial-code">
-+
-            {country.dialCode}
-          </span>
-        </li>
-      );
-    });
-  };
+          dialCode={country.dialCode}
+          isoCode={country.iso2}
+          name={country.name}
+          onMouseOver={onMouseOverOrFocus}
+          onClick={() => this.props.setFlag(country.iso2)}
+          onFocus={onMouseOverOrFocus}
+          flagRef={selectedFlag => {
+            this.selectedFlag = selectedFlag
+          }}
+          innerFlagRef={selectedFlagInner => {
+            this.selectedFlagInner = selectedFlagInner
+          }}
+          countryClass={countryClass}
+        />
+      )
+    })
+  }
 
   handleMouseOver = e => {
     if (e.currentTarget.getAttribute('class').indexOf('country') > -1) {
-      const selectedIndex = utils.retrieveLiIndex(e.currentTarget);
+      const selectedIndex = utils.retrieveLiIndex(e.currentTarget)
 
-      this.props.changeHighlightCountry(true, selectedIndex);
+      this.props.changeHighlightCountry(true, selectedIndex)
     }
-  };
+  }
 
   render() {
-    let options = '';
-    const preferredCountries = this.props.preferredCountries;
-    let preferredOptions = null;
-    const countries = this.props.countries;
-    const className = classNames({
-      'country-list': true,
-      hide: !this.props.showDropdown,
-    });
-    let divider = null;
+    const { preferredCountries, countries, showDropdown } = this.props
+    const className = classNames('country-list', {
+      hide: !showDropdown,
+    })
 
-    if (preferredCountries.length) {
-      preferredOptions = this.appendListItem(preferredCountries, true);
-      divider = <div className="divider" />;
-    }
-
-    options = this.appendListItem(countries);
+    const preferredOptions = this.appendListItem(preferredCountries, true)
+    const allOptions = this.appendListItem(countries)
+    const divider = <div className="divider" />
 
     return (
       <ul
         ref={listElement => {
-          this.listElement = listElement;
+          this.listElement = listElement
         }}
         className={className}
       >
         {preferredOptions}
-        {divider}
-        {options}
+        {preferredCountries.length > 0 ? divider : null}
+        {allOptions}
       </ul>
-    );
+    )
   }
 }
